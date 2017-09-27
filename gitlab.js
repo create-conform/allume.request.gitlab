@@ -35,7 +35,7 @@
             var direct;
             var directRepo;
 
-            if (selector.uri.authority.host == HOST_GITLAB) {
+            if (selector.uri.authority.host == HOST_GITLAB && (selector.package.substr(0,7) == "http://" || selector.package.substr(0,8) == "https://")) {
                 direct = selector.uri.path.substr(selector.uri.path.lastIndexOf("/") + 1);
                 directRepo = selector.uri.path.substr(0, selector.uri.path.lastIndexOf("/"));
                 directRepo = directRepo.substr(directRepo.lastIndexOf("/") + 1);
@@ -75,15 +75,22 @@
                     headers["PRIVATE-TOKEN"] = glToken;
                 }
 
+                if (direct) {
+                    repoName = selector.uri.path.substr(selector.uri.path.lastIndexOf("/", selector.uri.path.length - 2)).split("%2F");
+                    userName = repoName[0].substr(1);
+                    repoName = repoName[1];
+                }
+                else {
+                    repoName = selector.uri.path.split("/");
+                    userName = repoName[1];
+                    repoName = repoName[2];
+                }
+
                 if (glBranch) {
                     if (!direct) {
                         selector.uri = selector.parseURI("https://" + HOST_GITLAB + "/api/v4/projects" + selector.repository.url.substr(selector.repository.url.lastIndexOf("/", selector.repository.url.length - 2)) + URI_PATH_GITLABAPI_BRANCH_TEMPLATE + glBranch, glURLNamespaceSeperator).toString();
                     }
-                    else {
-                        repoName = selector.uri.path.substr(selector.uri.path.lastIndexOf("/", selector.uri.path.length - 2)).split("%2F");
-                        userName = repoName[0].substr(1);
-                        repoName = repoName[1];
-                        
+                    else {                            
                         selector.uri.path = selector.parseURI("https://" + HOST_GITLAB + "/api/v4/projects/" + userName + "%2F" + repoName + "/repository/archive?sha=" + glBranch, glURLNamespaceSeperator).toString();
                     }
                     resolve({"strip": 1, "headers": headers});
@@ -106,7 +113,9 @@
                         repoName = repoName.substr(0, repoName.length - 1);
                     }
 
-                    var archiveURL = archiveURL || selector.parseURI("https://" + HOST_GITLAB + "/api/v4/projects/" + userName + "%2F" + repoName + "/repository/archive?sha=" + tag.name, glURLNamespaceSeperator).toString();
+                    if (tag) {
+                        var archiveURL = archiveURL || selector.parseURI("https://" + HOST_GITLAB + "/api/v4/projects/" + userName + "%2F" + (glURLNamespaceSeperator? repoName.replace(/\./g,glURLNamespaceSeperator) : repoName) + "/repository/archive?sha=" + tag.name, glURLNamespaceSeperator).toString();
+                    }
 
                     if (glEnableCache) {
                         config.getVolume().then(function(cacheVolume) {
@@ -235,7 +244,7 @@
                     selector.uri.path = "/api/v4/projects/" + userName + (URI_PATH_GITLABAPI_TAGS_TEMPLATE).replace(/\$NAME/g,repoName);
                 }
                 else {
-                    selector.uri = selector.parseURI("https://" + HOST_GITLAB + "/api/v4/projects" + selector.repository.url.substr(selector.repository.url.lastIndexOf("/", selector.repository.url.length - 2)) + URI_PATH_GITLABAPI_TAGS_TEMPLATE, glURLNamespaceSeperator).toString();
+                    selector.uri = selector.parseURI("https://" + HOST_GITLAB + "/api/v4/projects/" + userName + URI_PATH_GITLABAPI_TAGS_TEMPLATE, glURLNamespaceSeperator).toString();
                 }
                 uriTags = selector.uri;
 
