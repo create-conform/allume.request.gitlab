@@ -88,10 +88,10 @@
 
                 if (glBranch) {
                     if (!direct) {
-                        selector.uri = selector.parseURI("https://" + HOST_GITLAB + "/api/v4/projects" + selector.repository.url.substr(selector.repository.url.lastIndexOf("/", selector.repository.url.length - 2)) + URI_PATH_GITLABAPI_BRANCH_TEMPLATE + glBranch, glURLNamespaceSeperator).toString();
+                        selector.uri = selector.parseURI("https://" + HOST_GITLAB + "/api/v4/projects/" + userName + URI_PATH_GITLABAPI_BRANCH_TEMPLATE + glBranch, glURLNamespaceSeperator).toString();
                     }
                     else {                            
-                        selector.uri.path = selector.parseURI("https://" + HOST_GITLAB + "/api/v4/projects/" + userName + "%2F" + repoName + "/repository/archive?sha=" + glBranch, glURLNamespaceSeperator).toString();
+                        selector.uri = selector.parseURI("https://" + HOST_GITLAB + "/api/v4/projects/" + userName + "%2F" + repoName + "/repository/archive?sha=" + glBranch, glURLNamespaceSeperator).toString();
                     }
                     resolve({"strip": 1, "headers": headers});
                     return;
