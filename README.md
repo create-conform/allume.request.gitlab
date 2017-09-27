@@ -26,9 +26,9 @@ If set the last commit of the given brach is used instead of tags with a matchin
 
 https://gitlab.com/create-conform/
 
-**Direct:**
-
-https://gitlab.com/create-conform/cc_demo/
-
 Note:
 URL must always end with slash.
+
+**Direct:**
+
+https://gitlab.com/create-conform/cc_demo

@@ -39,7 +39,7 @@
                 direct = selector.uri.path.substr(selector.uri.path.lastIndexOf("/") + 1);
                 directRepo = selector.uri.path.substr(0, selector.uri.path.lastIndexOf("/"));
                 directRepo = directRepo.substr(directRepo.lastIndexOf("/") + 1);
-                selector.uri.path = "/api/v4/projects/" + (selector.uri.path.lastIndexOf("/") == selector.uri.path.length - 1? selector.uri.path.substr(0, selector.uri.path.length - 2) : selector.uri.path);
+                selector.uri.path = "/api/v4/projects/" + (selector.uri.path.lastIndexOf("/") == selector.uri.path.length - 1? selector.uri.path.substr(1, selector.uri.path.length - 2) : selector.uri.path.substr(1)).replace(/\//g, "%2F");
             }
             if (selector.uri.authority.host != HOST_GITLAB) {
                 return;
@@ -68,6 +68,9 @@
                 var glURLNamespaceSeperator = glConf? glConf.urlNamespaceSeperator : null;
                 var glEnableCache = glConf && glConf.enableCache != null? glConf.enableCache : true;
 
+                var repoName;
+                var userName;
+
                 if (glToken) {
                     headers["PRIVATE-TOKEN"] = glToken;
                 }
@@ -77,12 +80,11 @@
                         selector.uri = selector.parseURI("https://" + HOST_GITLAB + "/api/v4/projects" + selector.repository.url.substr(selector.repository.url.lastIndexOf("/", selector.repository.url.length - 2)) + URI_PATH_GITLABAPI_BRANCH_TEMPLATE + glBranch, glURLNamespaceSeperator).toString();
                     }
                     else {
-                        var repoName = selector.uri.path.substr(selector.uri.path.lastIndexOf("/", selector.uri.path.length - 2));
-                        var userName = selector.uri.path.substr(selector.uri.path.lastIndexOf("/", selector.uri.path.length - repoName.length - 2) + 1);
-                        userName = userName.substr(0, userName.length - 1);
-                        repoName = repoName.substr(0, repoName.length - 1);
+                        repoName = selector.uri.path.substr(selector.uri.path.lastIndexOf("/", selector.uri.path.length - 2)).split("%2F");
+                        userName = repoName[0].substr(1);
+                        repoName = repoName[1];
                         
-                        selector.uri.path = selector.parseURI("https://" + HOST_GITLAB + "/api/v4/projects" + userName + "%2F" + repoName + "/repository/archive?sha=" + glBranch, glURLNamespaceSeperator).toString();
+                        selector.uri.path = selector.parseURI("https://" + HOST_GITLAB + "/api/v4/projects/" + userName + "%2F" + repoName + "/repository/archive?sha=" + glBranch, glURLNamespaceSeperator).toString();
                     }
                     resolve({"strip": 1, "headers": headers});
                     return;
@@ -97,12 +99,14 @@
                     // variable will contain error message when download of tarball url fails.
                     var tagErr;
 
-                    var repoName = selector.uri.path.substr(selector.uri.path.lastIndexOf("/", selector.uri.path.length - 2));
-                    var userName = selector.uri.path.substr(selector.uri.path.lastIndexOf("/", selector.uri.path.length - repoName.length - 2) + 1);
-                    userName = userName.substr(0, userName.length - 1);
-                    repoName = repoName.substr(0, repoName.length - 1);
+                    if (!repoName) {
+                        repoName = selector.uri.path.substr(selector.uri.path.lastIndexOf("/", selector.uri.path.length - 2));
+                        userName = selector.uri.path.substr(selector.uri.path.lastIndexOf("/", selector.uri.path.length - repoName.length - 2) + 1);
+                        userName = userName.substr(0, userName.length - 1);
+                        repoName = repoName.substr(0, repoName.length - 1);
+                    }
 
-                    var archiveURL = selector.parseURI("https://" + HOST_GITLAB + "/api/v4/projects" + userName + "%2F" + repoName + "/repository/archive?sha=" + tag.name, glURLNamespaceSeperator).toString();
+                    var archiveURL = archiveURL || selector.parseURI("https://" + HOST_GITLAB + "/api/v4/projects/" + userName + "%2F" + repoName + "/repository/archive?sha=" + tag.name, glURLNamespaceSeperator).toString();
 
                     if (glEnableCache) {
                         config.getVolume().then(function(cacheVolume) {
@@ -224,23 +228,20 @@
                 if (direct) {
                     //selector.uri.path += "repository/tags";
                     //uriTags = selector.uri;
-                    var repoName = selector.uri.path.substr(selector.uri.path.lastIndexOf("/", selector.uri.path.length - 2));
-                    var userName = selector.uri.path.substr(selector.uri.path.lastIndexOf("/", selector.uri.path.length - repoName.length - 2) + 1);
-                    userName = userName.substr(0, userName.length - 1);
-                    repoName = repoName.substr(0, repoName.length - 1);
+                    repoName = selector.uri.path.substr(selector.uri.path.lastIndexOf("/", selector.uri.path.length - 2)).split("%2F");
+                    userName = repoName[0].substr(1);
+                    repoName = repoName[1];
 
-                    selector.uri = selector.parseURI("https://" + HOST_GITLAB + "/api/v4/projects" + userName + URI_PATH_GITLABAPI_TAGS_TEMPLATE, glURLNamespaceSeperator).toString();
+                    selector.uri.path = "/api/v4/projects/" + userName + (URI_PATH_GITLABAPI_TAGS_TEMPLATE).replace(/\$NAME/g,repoName);
                 }
                 else {
                     selector.uri = selector.parseURI("https://" + HOST_GITLAB + "/api/v4/projects" + selector.repository.url.substr(selector.repository.url.lastIndexOf("/", selector.repository.url.length - 2)) + URI_PATH_GITLABAPI_TAGS_TEMPLATE, glURLNamespaceSeperator).toString();
                 }
+                uriTags = selector.uri;
 
                 uriTags.open().then(function (stream) {
                     stream.headers = headers;
                     stream.readAsJSON().then(function (tags) {
-                        if (tags) {
-                            tags = tags.values;
-                        }
                         if (!tags || tags.length == 0) {
                             reject(new Error("Package '" + selector.package + "' does not have any tags in the GitLab repository."));
                         }
