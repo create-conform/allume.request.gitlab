@@ -115,7 +115,7 @@
                     }
 
                     if (tag) {
-                        var archiveURL = archiveURL || selector.parseURI("https://" + HOST_GITLAB + "/api/v4/projects/" + userName + "%2F" + (glURLNamespaceSeperator? repoName.replace(/\./g,glURLNamespaceSeperator) : repoName) + "/repository/archive?sha=" + tag.name, glURLNamespaceSeperator).toString();
+                        var archiveURL = archiveURL || selector.parseURI("https://" + HOST_GITLAB + "/api/v4/projects/" + userName + "%2F$NAME_NO_NS/repository/archive?sha=" + tag.name, glURLNamespaceSeperator).toString();
                     }
 
                     if (glEnableCache) {
