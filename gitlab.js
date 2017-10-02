@@ -67,6 +67,7 @@
                 var glBranch = glConf? glConf.branch : null;
                 var glURLNamespaceSeperator = glConf? glConf.urlNamespaceSeperator : null;
                 var glEnableCache = glConf && glConf.enableCache != null? glConf.enableCache : true;
+                var glEnableNamespaceStripping = glConf && glConf.enableNamespaceStripping != null? glConf.enableNamespaceStripping : true;
 
                 var repoName;
                 var userName;
@@ -88,7 +89,7 @@
 
                 if (glBranch) {
                     if (!direct) {
-                        selector.uri = selector.parseURI("https://" + HOST_GITLAB + "/api/v4/projects/" + userName + URI_PATH_GITLABAPI_BRANCH_TEMPLATE + glBranch, glURLNamespaceSeperator).toString();
+                        selector.uri = selector.parseURI("https://" + HOST_GITLAB + "/api/v4/projects/" + userName + (glEnableNamespaceStripping? URI_PATH_GITLABAPI_BRANCH_TEMPLATE.replace("%2F$NAME/", "%2F$NAME_NO_NS/") : URI_PATH_GITLABAPI_BRANCH_TEMPLATE) + glBranch, glURLNamespaceSeperator).toString();
                     }
                     else {                            
                         selector.uri = selector.parseURI("https://" + HOST_GITLAB + "/api/v4/projects/" + userName + "%2F" + repoName + "/repository/archive?sha=" + glBranch, glURLNamespaceSeperator).toString();
@@ -244,7 +245,7 @@
                     selector.uri.path = "/api/v4/projects/" + userName + (URI_PATH_GITLABAPI_TAGS_TEMPLATE).replace(/\$NAME/g,repoName);
                 }
                 else {
-                    selector.uri = selector.parseURI("https://" + HOST_GITLAB + "/api/v4/projects/" + userName + URI_PATH_GITLABAPI_TAGS_TEMPLATE, glURLNamespaceSeperator).toString();
+                    selector.uri = selector.parseURI("https://" + HOST_GITLAB + "/api/v4/projects/" + userName + (glEnableNamespaceStripping? URI_PATH_GITLABAPI_TAGS_TEMPLATE.replace("%2F$NAME/", "%2F$NAME_NO_NS/") : URI_PATH_GITLABAPI_TAGS_TEMPLATE), glURLNamespaceSeperator).toString();
                 }
                 uriTags = selector.uri;
 
