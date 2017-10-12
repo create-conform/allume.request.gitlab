@@ -145,10 +145,10 @@
                                     resolveURI(highestCache);
                                 }
                                 else {
-                                    var id = (direct? directRepo + "/" + direct : (selector.repository.namespace + (selector.repository.namespace != ""? "/" : "") + selector.package)) + "." + (tag.name.indexOf("v") == 0? tag.name.substr(1) : tag.name);
+                                    var id = (direct? directRepo + "/" + direct : (selector.repository.namespace + (selector.repository.namespace != ""? "/" : "") + selector.name)) + "." + (tag.name.indexOf("v") == 0? tag.name.substr(1) : tag.name);
                                     var found;
                                     for (var u in cache) {
-                                        if (u == ((direct? direct : selector.package) + "." + (tag.name.indexOf("v") == 0? tag.name.substr(1) : tag.name))) {
+                                        if (u == ((direct? direct : selector.name) + "." + (tag.name.indexOf("v") == 0? tag.name.substr(1) : tag.name))) {
                                             found = u;
                                             break;
                                         }
